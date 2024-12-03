@@ -1,0 +1,131 @@
+# common/database/database_strategy.py
+
+from abc import ABC, abstractmethod
+
+class DatabaseStrategy(ABC):
+    @abstractmethod
+    def create_tables(self):
+        """Create necessary tables in the database."""
+        pass
+
+    @abstractmethod
+    def create_session(self):
+        """Create a session for database operations."""
+        pass
+
+
+# common/database/strategies/postgres_strategy.py
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from common.database.database_strategy import DatabaseStrategy
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String
+
+# Example SQLAlchemy base model
+Base = declarative_base()
+
+class User(Base):
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    age = Column(Integer)
+
+class PostgresStrategy(DatabaseStrategy):
+    def __init__(self, username: str, password: str, host: str, port: int, db_name: str):
+        self.database_url = f"postgresql://{username}:{password}@{host}:{port}/{db_name}"
+        self.engine = create_engine(self.database_url)
+        self.Session = sessionmaker(bind=self.engine)
+
+    def create_tables(self):
+        Base.metadata.create_all(self.engine)
+        print("Postgres tables created")
+
+    def create_session(self):
+        return self.Session()
+
+
+# common/database/database_module.py
+
+from injector import Module, Binder
+from common.database.database_strategy import DatabaseStrategy
+from common.database.strategies.postgres_strategy import PostgresStrategy
+from common.database.strategies.sqlite_strategy import SQLiteStrategy
+
+class DatabaseModule(Module):
+    def configure(self, binder: Binder) -> None:
+        # Choose which strategy to bind based on configuration or environment
+        # Here, we're binding PostgresStrategy for example, but you can choose
+        # SQLiteStrategy or other strategies depending on the environment.
+
+        # Example: Postgres Configuration (can be dynamic based on config/env)
+        binder.bind(DatabaseStrategy, to=PostgresStrategy(
+            username="user",
+            password="password",
+            host="localhost",
+            port=5432,
+            db_name="mydb"
+        ))
+
+        # Alternatively, you can bind SQLiteStrategy if needed:
+        # binder.bind(DatabaseStrategy, to=SQLiteStrategy("sqlite_db_file.db"))
+
+# common/app_builder.py
+
+from fastapi import FastAPI
+from injector import Injector
+from common.database.database_strategy import DatabaseStrategy
+from common.database.database_module import DatabaseModule
+from common.app_router import AppRouter  # Assuming you have this class for routing
+from common.utils import get_env_variables
+from common.middleware import HTTPInterceptor
+from common.handlers import GeneralExceptionHandler, HTTPExceptionHandler
+
+class AppBuilder:
+    def __init__(self):
+        # Initialize FastAPI app and DI container
+        self.__app = FastAPI()
+        self.__injector = Injector([DatabaseModule()])  # Inject the DatabaseModule
+        self.__router = AppRouter(self.__injector).get_router()
+        self.__env = get_env_variables()
+
+    def set_open_api(self) -> "AppBuilder":
+        env_variables = self.__env.open_api
+        self.__app.title = env_variables.title
+        self.__app.description = env_variables.description
+        self.__app.version = env_variables.version
+        return self
+
+    def set_http_logging_middleware(self) -> "AppBuilder":
+        self.__app.add_middleware(HTTPInterceptor)
+        return self
+
+    def set_exception_handlers(self) -> "AppBuilder":
+        self.__app.add_exception_handler(
+            Exception, GeneralExceptionHandler.handle_exception
+        )
+        self.__app.add_exception_handler(
+            HTTPException, HTTPExceptionHandler.handle_exception
+        )
+        return self
+
+    def set_router(self) -> "AppBuilder":
+        env_variables = self.__env.app
+        self.__app.include_router(
+            self.__router,
+            prefix=f"/{env_variables.global_prefix}/{env_variables.version}",
+        )
+        return self
+
+    def set_database(self) -> "AppBuilder":
+        """Configure the database connection."""
+        db_strategy = self.__injector.get(DatabaseStrategy)
+
+        # Here, you can perform any setup or initialization needed for the database
+        db_strategy.create_tables()  # Create tables (if not already created)
+
+        return self
+
+    def build(self) -> FastAPI:
+        """Build and return the FastAPI app."""
+        return self.__app

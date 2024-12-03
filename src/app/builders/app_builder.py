@@ -47,5 +47,8 @@ class AppBuilder:
         )
         return self
 
+    def set_database(self) -> "AppBuilder":
+        pass
+
     def build(self):
         return self.__app

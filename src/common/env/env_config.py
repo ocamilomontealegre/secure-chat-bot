@@ -2,15 +2,17 @@ from pydantic import ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from common.env.app_env_config import AppEnvVariables
 from common.env.open_api_env_config import OpenAPIEnvVariables
+from common.env.pg_env_config import PgEnvVariables
 
 
 class EnvVariables(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env", env_nested_delimiter="_"
+        case_sensitive=False,  env_file=".env", env_nested_delimiter="_"
     )
 
     app: AppEnvVariables
     open_api: OpenAPIEnvVariables
+    pg: PgEnvVariables
 
 
 def get_env_variables() -> EnvVariables:
