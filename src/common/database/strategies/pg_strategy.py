@@ -1,14 +1,16 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from .database_strategy import DatabaseStrategy
+from common.env.pg_env_config import PgEnvVariables
+
 
 class PgStrategy(DatabaseStrategy):
-    def __init__(self, host, port, username, password, database):
-        self.host = host
-        self.port = port
-        self.username = username
-        self.password = password
-        self.database = database
+    def __init__(self, pg_env: PgEnvVariables):
+        self.host = pg_env.host
+        self.port = pg_env.port
+        self.username = pg_env.username
+        self.password = pg_env.password
+        self.database = pg_env.database
 
     def get_connection_url(self):
         return f"postgresql://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}"
@@ -20,4 +22,3 @@ class PgStrategy(DatabaseStrategy):
         engine = self.create_engine()
         Session = sessionmaker(bind=engine)
         return Session()
-

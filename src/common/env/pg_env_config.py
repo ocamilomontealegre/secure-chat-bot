@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 
+
 class PgEnvVariables(BaseModel):
     host: str = Field(default="localhost", description="PG host")
     port: int = Field(

@@ -7,7 +7,7 @@ from common.env.pg_env_config import PgEnvVariables
 
 class EnvVariables(BaseSettings):
     model_config = SettingsConfigDict(
-        case_sensitive=False,  env_file=".env", env_nested_delimiter="_"
+        case_sensitive=False, env_file=".env", env_nested_delimiter="_"
     )
 
     app: AppEnvVariables

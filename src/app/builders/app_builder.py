@@ -1,8 +1,10 @@
 from fastapi import FastAPI, HTTPException
 from injector import Injector
+from sqlalchemy import text
 from app.app_module import AppModule
 from app.routers.app_router import AppRouter
 from common.interceptors import HTTPInterceptor
+from common.database.strategies import DatabaseStrategy
 from common.exception_handlers import (
     GeneralExceptionHandler,
     HTTPExceptionHandler,
@@ -48,7 +50,11 @@ class AppBuilder:
         return self
 
     def set_database(self) -> "AppBuilder":
-        pass
+        db = self.__injector.get(DatabaseStrategy)
+        db_session = db.create_session()
+        db_session.execute(text("SELECT 1"))
+        print("OK")
+        return self
 
     def build(self):
         return self.__app
