@@ -1,6 +1,6 @@
 from injector import Binder, Module, singleton
 from common.env import get_env_variables
-from .strategies import DatabaseStrategy, PgStrategy
+from .strategies import DatabaseStrategy, PgStrategy, SqliteStrategy
 
 
 class DatabaseModule(Module):
@@ -8,5 +8,6 @@ class DatabaseModule(Module):
         self.__env = get_env_variables().pg
 
     def configure(self, binder: Binder) -> None:
-        binder.bind(DatabaseStrategy, to=lambda: PgStrategy(
-            pg_env=self.__env), scope=singleton)
+        # binder.bind(DatabaseStrategy, to=lambda: PgStrategy(
+        #     pg_env=self.__env), scope=singleton)
+        binder.bind(DatabaseStrategy, to=SqliteStrategy, scope=singleton)
