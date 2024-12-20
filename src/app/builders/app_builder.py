@@ -51,6 +51,7 @@ class AppBuilder:
     def set_database(self) -> "AppBuilder":
         db = self.__injector.get(DatabaseStrategy)
         db.create_session()
+        db.create_tables()
 
         return self
 

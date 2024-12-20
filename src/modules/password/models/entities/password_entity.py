@@ -6,8 +6,10 @@ from common.database.models.entities.base_entity import Base
 class Password(Base):
     __tablename__ = "passwords"
 
-    id = Column(String(36), primary_key=True, default=uuid4())
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     password = Column(String, unique=False, nullable=False)
     created_at= Column(DateTime, default=func.now())
     updated_at= Column(DateTime, default=func.now(), onupdate=func.now())
 
+    def __repr__(self):
+        return f"<Password(id={self.id}, password={self.password})>"

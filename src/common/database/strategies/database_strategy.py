@@ -3,6 +3,11 @@ from abc import ABC, abstractmethod
 
 class DatabaseStrategy(ABC):
     @abstractmethod
+    def get_connection_url(self):
+        """Method to get the connection url"""
+        pass
+
+    @abstractmethod
     def create_engine(self):
         """Method to create a database engine"""
         pass
@@ -13,6 +18,6 @@ class DatabaseStrategy(ABC):
         pass
 
     @abstractmethod
-    def get_connection_url(self):
-        """Method to get the connection url"""
+    def create_tables(self):
+        """Create tables"""
         pass

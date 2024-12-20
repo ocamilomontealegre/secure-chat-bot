@@ -17,6 +17,7 @@ injector = "^0.22.0"
 sqlalchemy = "^2.0.36"
 nltk = "^3.9.1"
 psycopg2-binary = "^2.9.10"
+zxcvbn = "^4.4.28"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.10.0"
